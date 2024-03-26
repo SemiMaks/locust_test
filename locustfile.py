@@ -1,21 +1,45 @@
-from locust import HttpUser, task, between
+# Пример использования TaskSets/Вложенные наборы задач
+
+from locust import HttpUser, TaskSet, task, between
 
 
-class WebsiteTestuser(HttpUser):
-    wait_time = between(0, 0)
+class ForumThread(TaskSet):
+    pass
 
-    def on_start(self):
-        """on_start"""
-        pass
 
-    def on_stop(self):
-        """on+stop"""
+class ForumPage(TaskSet):
+    # диапазон времени может быть задан индивидуально в TaskSets
+    wait_time = between(10, 300)
+
+    # TaskSets может иметь несколько уровней вложенности
+    tasks = {
+        ForumThread: 3
+    }
+
+    @task(3)
+    def forum_index(self):
         pass
 
     @task(1)
-    def run_test(self):
-        self.client.get("http://12.0.0.1:5000")
+    def stop(self):
+        self.interrupt()
 
-    @task(2)
-    def run_test(self):
-        self.client.get("http://12.0.0.1:5000/index")
+
+class AboutPage(TaskSet):
+    pass
+
+
+class WebsiteUser(HttpUser):
+    wait_time = between(5, 15)
+
+    # в подднаборах задач можно импользовать dict/словарь
+    tasks = {
+        ForumPage: 20,
+        AboutPage: 10,
+    }
+
+    # Можно мсользовать @task декоратор а так же
+    # задачи в словаре Locust/TaskSet
+    @task(10)
+    def index(self):
+        pass
